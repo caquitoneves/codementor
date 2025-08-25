@@ -1,98 +1,96 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 📚 Backend - Plataforma de Mentoria
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Este é o backend da plataforma de mentoria, desenvolvido com **NestJS** e **Prisma**.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## 🚀 Tecnologias
+- [NestJS](https://nestjs.com/) - Framework Node.js
+- [Prisma](https://www.prisma.io/) - ORM
+- [PostgreSQL](https://www.postgresql.org/) - Banco de dados
+- [JWT](https://jwt.io/) - Autenticação
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+---
 
-## Project setup
+## 📂 Estrutura de Módulos
 
+### **Auth**
+- Registro e login de usuários
+- Geração e validação de tokens JWT
+
+### **Users**
+- Gestão de perfis de usuários (Mentor, Empresa, Admin)
+
+### **Mentors**
+- Busca (`/mentors/search`)
+- Sugestões (`/mentors/suggestions/:companyId`)
+- Destaques (`/mentors/highlighted`)
+
+### **Programs**
+- CRUD de programas de mentoria (`/programs`)
+- Filtros por empresa, mentor e status
+- Contagem de participantes e sessões
+- Inclusão de participantes na criação
+
+### **Sessions**
+- CRUD de sessões (`/sessions`)
+- Vinculação a programas
+- Atualização automática de progresso dos participantes
+
+### **Participants**
+- CRUD de participantes (`/participants`)
+- Progresso, avaliação e conclusão
+- Prevenção de duplicidade de inscrição
+
+---
+
+## 🔗 Fluxo Principal
+1. **Empresa** encontra mentor (`/mentors/suggestions`)
+2. Cria **programa** (`/programs`)
+3. Adiciona **participantes** (`/participants` ou direto na criação do programa)
+4. Agenda **sessões** (`/sessions`)
+5. Marca sessões como concluídas → progresso dos participantes é atualizado
+6. Programa finalizado → status `COMPLETED`
+
+---
+
+## ⚙️ Configuração
+
+### 1. Clonar repositório
 ```bash
-$ npm install
+git clone <url-do-repo>
+cd backend
 ```
 
-## Compile and run the project
-
+### 2. Instalar dependências
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm install
 ```
 
-## Run tests
-
+### 3. Configurar variáveis de ambiente
+Crie um arquivo .env na raiz do backend com o seguinte conteúdo (ajuste conforme seu ambiente):
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+DATABASE_URL="postgresql://usuario:senha@localhost:5432/nome_do_banco"
+JWT_SECRET="sua_chave_secreta"
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
+### 4. Rodar migrações do Prisma
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npx prisma migrate dev
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### 5. Rodar servidor em modo desenvolvimento
+```bash
+npm run start:dev
+```
 
-## Resources
+## 📌 Convenções
+- **DTOs** para entrada de dados
+- **Enums** do Prisma para status
+- **Guards** (JwtAuthGuard) para proteger rotas privadas
+- **Include** no Prisma para evitar múltiplas queries no frontend
 
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## 📅 Próximos Passos
+- Implementar módulo de reviews
+- Implementar módulo de pagamentos
+- Criar notificações para mentores e empresas

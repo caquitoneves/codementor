@@ -9,6 +9,8 @@ import { UsersModule } from './users/users.module';
 import { MentorsModule } from './mentors/mentors.module';
 import { CompaniesModule } from './companies/companies.module';
 import { ProgramsModule } from './programs/programs.module';
+import { SessionsModule } from './sessions/sessions.module';
+import { ParticipantsModule } from './participants/participants.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { ProgramsModule } from './programs/programs.module';
     MentorsModule,
     CompaniesModule,
     ProgramsModule,
+    SessionsModule,
+    ParticipantsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
