@@ -1,0 +1,247 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserType {
+  MENTOR
+  COMPANY
+  ADMIN
+}
+
+enum ProgramStatus {
+  DRAFT
+  ACTIVE
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum SessionStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum ProficiencyLevel {
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum CompanySize {
+  STARTUP
+  SMALL
+  MEDIUM
+  LARGE
+}
+
+enum Seniority {
+  JUNIOR
+  PLENO
+  SENIOR
+  STAFF
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String    @map("password_hash")
+  name          String
+  avatarUrl     String?   @map("avatar_url")
+  phone         String?
+  userType      UserType  @map("user_type")
+  isActive      Boolean   @default(true) @map("is_active")
+  emailVerified Boolean   @default(false) @map("email_verified")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  mentor  Mentor?
+  company Company?
+
+  @@map("users")
+}
+
+model Mentor {
+  id                    String    @id @default(uuid())
+  userId                String    @unique @map("user_id")
+  title                 String
+  bio                   String?
+  yearsExperience       Int       @map("years_experience")
+  hourlyRate            Decimal   @map("hourly_rate")
+  linkedinUrl           String?   @map("linkedin_url")
+  githubUrl             String?   @map("github_url")
+  portfolioUrl          String?   @map("portfolio_url")
+  availabilityHours     Int       @default(20) @map("availability_hours")
+  rating                Decimal   @default(0)
+  totalReviews          Int       @default(0) @map("total_reviews")
+  totalMentorships      Int       @default(0) @map("total_mentorships")
+  isApproved            Boolean   @default(false) @map("is_approved")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+  seniority             Seniority
+  availabilityHoursPerWeek Int    @default(0) @map("availability_hours_per_week")
+  stacks                String[] // ex: ["react", "node", "aws"]
+
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skills     MentorSkill[]
+  programs   MentorshipProgram[]
+
+  @@map("mentors")
+}
+
+model Skill {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  category  String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  mentorSkills MentorSkill[]
+
+  @@map("skills")
+}
+
+model MentorSkill {
+  id                 String           @id @default(uuid())
+  mentorId           String           @map("mentor_id")
+  skillId            String           @map("skill_id")
+  proficiencyLevel   ProficiencyLevel @map("proficiency_level")
+  yearsExperience    Int?             @map("years_experience")
+
+  mentor Mentor @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+  skill  Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([mentorId, skillId])
+  @@map("mentor_skills")
+}
+
+model Company {
+  id          String      @id @default(uuid())
+  userId      String      @unique @map("user_id")
+  companyName String      @map("company_name")
+  cnpj        String?     @unique
+  industry    String?
+  companySize CompanySize @map("company_size")
+  website     String?
+  address     String?
+  description String?
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  requiredStacks  String[] // ex: ["java", "spring", "docker"]
+  plannedLearners Int      @default(0) @map("planned_learners")
+  budgetPerLearner Int?    @map("budget_per_learner")
+
+  user     User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  programs MentorshipProgram[]
+
+  @@map("companies")
+}
+
+model MentorshipProgram {
+  id              String        @id @default(uuid())
+  companyId       String        @map("company_id")
+  mentorId        String        @map("mentor_id")
+  title           String
+  description     String?
+  skillFocus      String        @map("skill_focus")
+  durationWeeks   Int           @map("duration_weeks")
+  totalHours      Int           @map("total_hours")
+  maxParticipants Int           @default(5) @map("max_participants")
+  priceTotal      Decimal       @map("price_total")
+  status          ProgramStatus @default(DRAFT)
+  startDate       DateTime?     @map("start_date")
+  endDate         DateTime?     @map("end_date")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  company      Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  mentor       Mentor                @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+  participants ProgramParticipant[]
+  sessions     MentoringSession[]
+  reviews      Review[]
+  payments     Payment[]
+
+  @@map("mentorship_programs")
+}
+
+model ProgramParticipant {
+  id                  String    @id @default(uuid())
+  programId           String    @map("program_id")
+  participantName     String    @map("participant_name")
+  participantEmail    String    @map("participant_email")
+  currentLevel        String    @map("current_level")
+  goals               String?
+  progressPercentage  Int       @default(0) @map("progress_percentage")
+  finalRating         Int?      @map("final_rating")
+  completionDate      DateTime? @map("completion_date")
+  createdAt           DateTime  @default(now()) @map("created_at")
+
+  program MentorshipProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@map("program_participants")
+}
+
+model MentoringSession {
+  id              String        @id @default(uuid())
+  programId       String        @map("program_id")
+  sessionNumber   Int           @map("session_number")
+  title           String
+  description     String?
+  scheduledDate   DateTime      @map("scheduled_date")
+  durationMinutes Int           @map("duration_minutes")
+  sessionType     String        @map("session_type")
+  zoomLink        String?       @map("zoom_link")
+  materialsUrl    String?       @map("materials_url")
+  status          SessionStatus @default(SCHEDULED)
+  attendanceCount Int           @default(0) @map("attendance_count")
+  sessionNotes    String?       @map("session_notes")
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  program MentorshipProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@map("mentoring_sessions")
+}
+
+model Review {
+  id              String  @id @default(uuid())
+  programId       String  @map("program_id")
+  reviewerType    String  @map("reviewer_type")
+  reviewerName    String  @map("reviewer_name")
+  rating          Int
+  comment         String?
+  wouldRecommend  Boolean? @map("would_recommend")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  program MentorshipProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
+}
+
+model Payment {
+  id              String        @id @default(uuid())
+  programId       String        @map("program_id")
+  amount          Decimal
+  platformFee     Decimal       @map("platform_fee")
+  mentorPayout    Decimal       @map("mentor_payout")
+  paymentMethod   String?       @map("payment_method")
+  stripePaymentId String?       @map("stripe_payment_id")
+  status          PaymentStatus @default(PENDING)
+  paidAt          DateTime?     @map("paid_at")
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  program MentorshipProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
